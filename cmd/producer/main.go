@@ -1,18 +1,31 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"log"
 )
 
 func main() {
-	deliveryChan := make(chan kafka.Event)
-	producer := NewKafkaProducer()
-	Publish("mesage testando o consumer no GoLang 01", "test-topic", producer, nil, deliveryChan)
-	//Publish("mesage enviada do GoLang 03", "test-topic", producer, []byte("transferencia1"), deliveryChan)
-	go DeliveryReport(deliveryChan) // async
-	producer.Flush(2000)
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Println("Digite a mensagem para ser publicado no kafka:")
+	message, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+	} else {
+		fmt.Printf("mensagem kafka: %s", message)
+
+		deliveryChan := make(chan kafka.Event)
+		producer := NewKafkaProducer()
+		Publish(message, "test-topic", producer, nil, deliveryChan)
+		// Publish("mesage enviada do GoLang 03", "test-topic", producer, []byte("transferencia1"), deliveryChan)
+		
+		go DeliveryReport(deliveryChan) // async
+		producer.Flush(2000)
+	}
 }
 
 func NewKafkaProducer() *kafka.Producer {
